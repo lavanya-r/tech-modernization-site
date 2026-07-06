@@ -195,7 +195,7 @@ categories:
     desc: Define the target-state architecture covering application, integration, data, and infrastructure views.
     icon: "◎"
     quality_gates:
-      - Prelimineray Design Review
+      - Preliminary Design Review
     workproducts:
       - name: Overall Architecture
         description: Develop overall Architecture view of the legacy system
@@ -210,17 +210,27 @@ categories:
           - ART 0513
       - name: Application Architecture
         phase_id: phase-hld
-        description: Human-centered design for the digital portals compliant to WCAG 2.1 AA standards
-        owner: role-ux-design-lead
+        description: Application design to meet functional requirements
+        owner: role-application-design-lead
+        input_artifacts:
+          - ART 0647
+          - ART 0507
+          - ART 0512
         artifacts:
-          - APP 148
-          - APP 0730
+          - ART 0513
+          - ART 0515
+          - ART 0505
       - name: Integration Architecture
         description: Integration architecture for external and internal integration 
         owner: role-integration-architect
+        input_artifacts:
+          - ART 0647
+          - ART 0507
+          - ART 0512        
         artifacts:
-          - APP 148
-          - APP 0730
+          - ART 0513
+          - ART 0512         
+
 
 
   - id: phase-lld

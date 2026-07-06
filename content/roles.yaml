@@ -12,8 +12,8 @@ roles:
   - id: role-lead-architect
     name: Lead Architect
 
-  - id: role-cloud-architecture-lead
-    name: Cloud Architecture Lead
+  - id: role-application-design-lead
+    name: Application Architect
 
   - id: role-security-architect
     name: Security Architect

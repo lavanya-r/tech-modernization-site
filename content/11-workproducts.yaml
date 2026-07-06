@@ -8,15 +8,23 @@ description: >
 # Use artifact_id values in workproduct 'artifacts' (outputs) and 'input_artifacts'.
 artifacts:
   # Assessment outputs
-  - id: NOID
+  - id: ASIS_NOID
     name: Current State Assessment
+  - id: ASIS_NOID2
+    name: Code Analysis (using ARC)    
+  - id: ASIS_NOID3
+    name: As-is IT System Baseline Report    
   # Requirement outputs
   - id: ART 0651
     name: System Context
     desc: The System Context work product initially represents the entire system as a single object or process and identifies the interfaces between the system and external entities.
   - id: ART 0647
     name: Requirements
-    desc: Requirements artifact documents the description of features or capabilities, intended behavior, performance etc. required by stakeholders for the agreed solution or service.
+    desc: This artifact documents the description of features or capabilities, intended behavior, performance etc. required by stakeholders for the agreed solution or service.
+    input_artifacts:
+      - ASIS_NOID
+      - ASIS_NOID2
+      - ASIS_NOID3
   - id: OPS 315
     name: Security & Privacy Requirements
     desc: This artifact captures requirements across Administration, Asset Protection, Authorization, Accountability, Availability and Assurance.

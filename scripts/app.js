@@ -165,15 +165,19 @@ async function loadPage(item) {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const text = await response.text();
     const isYaml = item.file.endsWith('.yaml') || item.file.endsWith('.yml');
-    let html;
+    let result;
     if (isYaml) {
       const data = jsyaml.load(text);
-      html = await renderYaml(item.id, data);
+      result = await renderYaml(item.id, data);
     } else {
-      html = marked.parse(text);
+      result = marked.parse(text);
     }
+    // renderArtifactGraph returns { html, init } instead of a plain string
+    const html   = (result && result.html) ? result.html : result;
+    const initFn = (result && result.init) ? result.init : null;
     MD_CACHE[cacheKey] = html;
     container.innerHTML = `<div class="md-content">${html}</div>`;
+    if (initFn) initFn();   // called after innerHTML is set — DOM is ready
     window.scrollTo(0, 0);
   } catch (err) {
     container.innerHTML = `
@@ -439,24 +443,30 @@ function renderArtifactGraph(data) {
 
   // ── Determine category group from id prefix ──────────────────────────────
   const GROUP_RULES = [
-    { test: id => /^ART 06[45]/.test(id),  group: 'requirements',   label: 'Requirements'    },
-    { test: id => /^ARC/.test(id),          group: 'standards',      label: 'Standards'       },
-    { test: id => /^ART 05/.test(id),       group: 'architecture',   label: 'Architecture'    },
-    { test: id => /^APP/.test(id),          group: 'design',         label: 'Design'          },
-    { test: id => /^CUST/.test(id),         group: 'design',         label: 'Design'          },
-    { test: id => /^art-0[34]/.test(id),    group: 'engineering',    label: 'Engineering'     },
-    { test: id => /^art-042|art-043|art-044/.test(id), group: 'qa', label: 'QA'              },
-    { test: id => /^ENG/.test(id),          group: 'quality-gate',   label: 'Quality Gates'   },
-    { test: id => /^APP 402/.test(id),      group: 'lifecycle',      label: 'Lifecycle'       },
+    { test: id => /^ASIS/i.test(id),                    group: 'assessment',   label: 'Assessment'    },
+    { test: id => /^ART 06[45]/i.test(id),              group: 'requirements', label: 'Requirements'  },
+    { test: id => /^ART 0650/i.test(id),                group: 'requirements', label: 'Requirements'  },
+    { test: id => /^ART 0647/i.test(id),                group: 'requirements', label: 'Requirements'  },
+    { test: id => /^OPS/i.test(id),                     group: 'security',     label: 'Security'      },
+    { test: id => /^ARC/i.test(id),                     group: 'standards',    label: 'Standards'     },
+    { test: id => /^ART 05/i.test(id),                  group: 'architecture', label: 'Architecture'  },
+    { test: id => /^APP 402/i.test(id),                 group: 'lifecycle',    label: 'Lifecycle'     },
+    { test: id => /^APP/i.test(id),                     group: 'design',       label: 'Design'        },
+    { test: id => /^CUST/i.test(id),                    group: 'design',       label: 'Design'        },
+    { test: id => /^art-04[0-9]/i.test(id),             group: 'engineering',  label: 'Engineering'   },
+    { test: id => /^art-042$|^art-043$|^art-044$/i.test(id), group: 'qa',     label: 'QA'            },
+    { test: id => /^ENG/i.test(id),                     group: 'quality-gate', label: 'Quality Gates' },
   ];
 
   const GROUP_COLORS = {
+    assessment:    '#f59e0b',   // amber
     requirements:  '#3b82f6',   // blue
+    security:      '#7c3aed',   // purple
     standards:     '#8b5cf6',   // violet
     architecture:  '#003a70',   // navy
     design:        '#0e7490',   // teal
     engineering:   '#065f46',   // green
-    qa:            '#92400e',   // amber
+    qa:            '#92400e',   // brown
     'quality-gate':'#991b1b',   // red
     lifecycle:     '#4a5568',   // grey
     unknown:       '#718096',
@@ -532,10 +542,9 @@ function renderArtifactGraph(data) {
       <div class="ag-tooltip" id="ag-tooltip"></div>
     </div>`;
 
-  // Schedule D3 initialisation after the HTML is inserted into the DOM
-  requestAnimationFrame(() => initArtifactGraph(nodes, links, GROUP_COLORS));
-
-  return html;
+  // Return both the HTML and an init callback so loadPage can call it
+  // after the HTML is actually written to the DOM.
+  return { html, init: () => initArtifactGraph(nodes, links, GROUP_COLORS) };
 }
 
 function initArtifactGraph(nodes, links, GROUP_COLORS) {

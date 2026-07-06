@@ -1,0 +1,57 @@
+title: Roles
+description: >
+  Unique roles responsible for owning and delivering work products
+  across the Architecture, Design, Engineering, and Quality Assurance disciplines.
+
+roles:
+  # ── Architecture ──────────────────────────────────────────────────────────────
+  - id: role-lead-architect
+    name: Lead Architect
+
+  - id: role-cloud-architecture-lead
+    name: Cloud Architecture Lead
+
+  - id: role-security-architect
+    name: Security Architect
+
+  - id: role-integration-architect
+    name: Integration Architect
+
+  - id: role-data-architect
+    name: Data Architect
+
+  # ── Design ────────────────────────────────────────────────────────────────────
+  - id: role-business-architecture-lead
+    name: Business Architecture Lead
+
+  - id: role-ux-design-lead
+    name: UX Design Lead
+
+  - id: role-platform-engineering-lead
+    name: Platform Engineering Lead
+
+  - id: role-data-governance-lead
+    name: Data Governance Lead
+
+  # ── Engineering ───────────────────────────────────────────────────────────────
+  - id: role-migration-engineering-lead
+    name: Migration Engineering Lead
+
+  - id: role-identity-engineering-lead
+    name: Identity Engineering Lead
+
+  - id: role-application-engineering-lead
+    name: Application Engineering Lead
+
+  # ── Quality Assurance ─────────────────────────────────────────────────────────
+  - id: role-qa-lead
+    name: QA Lead
+
+  - id: role-security-testing-lead
+    name: Security Testing Lead
+
+  - id: role-performance-engineering-lead
+    name: Performance Engineering Lead
+
+  - id: role-accessibility-lead
+    name: Accessibility Lead

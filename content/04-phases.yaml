@@ -1,0 +1,55 @@
+title: Modernization Program Phases
+description: >
+  The legacy technology debt modernization program is structured across 5 phases, each with distinct objectives, deliverables,
+  and exit criteria. Phases are not purely sequential — later phases begin while earlier
+  ones continue, following a rolling-wave planning approach.
+
+phases:
+  - id: phase-disco
+    number: 1
+    name: Discovery
+    objective: Gather current state IT information and develop target state requirements.
+    activities:
+      - Gather Current State IT environment details through interviews, workshops and document analysis
+      - Conduct code analysis using AI tools
+      - Baseline Current State findings 
+      - Establish To-Be state Statement of Requirements
+      - Develop User Stories with Acceptance criteria
+    deliverables:
+      - Current State Assessment
+      - To-Be Requirements (Functional, Non-Functional)
+      - User Stories
+    quality_gates:
+      - Business Requirements Review (BRR)
+      - System Requirements Review (SRR)
+
+  - id: phase-hld
+    number: 2
+    name: High Level Design
+    objective: Develop High level solution architecture and design blueprint
+    activities:
+      - "Data center consolidation: decommission 8 of 14 on-premise data centers"
+      - Deploy cloud landing zones (AWS GovCloud / Azure Government) per agency
+      - Implement Zero Trust network segmentation and identity foundation (IAM/PAM)
+      - Migrate Tier-3 and Tier-4 (low-criticality) workloads
+      - Deploy enterprise monitoring, logging, and SIEM platform
+      - Establish API gateway and integration platform
+    deliverables:
+      - tbd
+    quality_gates:
+      - Prelimineray Design Review (PDR)
+
+  - id: phase-lld
+    number: 3
+    name: Low Level Design
+    objective: Develop Low Level Design
+    activities:
+      - Execute Application Rationalization Plan (Retain / Retire / Rehost / Replatform / Refactor / Replace)
+      - Migrate all Tier-1 mission-critical systems using targeted modernization strategies
+      - "Decommission 180+ legacy applications identified for retirement"
+      - Build/deploy replacement microservices for core business functions
+      - Implement event-driven architecture for high-throughput systems
+    deliverables:
+      - tbd
+    quality_gates:
+      - Critical Design Review (CDR)

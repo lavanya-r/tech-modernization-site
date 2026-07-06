@@ -4,6 +4,10 @@ description: >
   across the Architecture, Design, Engineering, and Quality Assurance disciplines.
 
 roles:
+  # ── Business Analysis ──────────────────────────────────────────────────────────────
+  - id: role-lead-business-analyst
+    name: Lead Business analyst
+
   # ── Architecture ──────────────────────────────────────────────────────────────
   - id: role-lead-architect
     name: Lead Architect
@@ -21,8 +25,8 @@ roles:
     name: Data Architect
 
   # ── Design ────────────────────────────────────────────────────────────────────
-  - id: role-business-architecture-lead
-    name: Business Architecture Lead
+  - id: role-fde
+    name: Forward Deployed Engineer
 
   - id: role-ux-design-lead
     name: UX Design Lead
@@ -36,9 +40,6 @@ roles:
   # ── Engineering ───────────────────────────────────────────────────────────────
   - id: role-migration-engineering-lead
     name: Migration Engineering Lead
-
-  - id: role-identity-engineering-lead
-    name: Identity Engineering Lead
 
   - id: role-application-engineering-lead
     name: Application Engineering Lead

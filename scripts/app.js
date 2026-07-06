@@ -318,12 +318,25 @@ async function renderWorkproducts(data) {
     </div>`;
 
   categories.forEach(cat => {
+    const qgHtml = (cat.quality_gates || []).length
+      ? `<div class="wp-qg-card">
+           <div class="wp-qg-label">Quality Gates</div>
+           <ul class="wp-qg-list">
+             ${(cat.quality_gates).map(qg => `<li class="wp-qg-item"><span class="wp-qg-icon">✓</span>${qg}</li>`).join('')}
+           </ul>
+         </div>`
+      : '';
+
     html += `
       <div class="wp-category">
         <div class="wp-category-header">
           <span class="wp-category-icon">${cat.icon}</span>
-          <h2 class="wp-category-name">${cat.name}</h2>
+          <div>
+            <h2 class="wp-category-name">${cat.name}</h2>
+            ${cat.desc ? `<p class="wp-category-desc">${cat.desc}</p>` : ''}
+          </div>
         </div>
+        ${qgHtml}
         <div class="wp-grid">`;
 
     (cat.workproducts || []).forEach(wp => {
@@ -337,14 +350,6 @@ async function renderWorkproducts(data) {
       const inputsHtml  = resolveArtifacts(wp.input_artifacts);
       const outputsHtml = resolveArtifacts(wp.artifacts);
 
-      // Resolve phase_id → phase name , with a nav link to the phases page
-      const phase = phaseMap[wp.phase_id];
-      const phaseHtml = phase
-        ? `<a class="wp-phase-link" href="#phases" onclick="event.preventDefault();navigateTo('phases');history.pushState(null,'','#phases');">
-             Phase ${phase.number}: ${phase.name}
-           </a>`
-        : `<span class="wp-phase-link">${wp.phase_id || ''}</span>`;
-
       // Resolve owner role-id → display name with link to roles page
       const ownerName = roleMap[wp.owner] || wp.owner;
       const ownerHtml = roleMap[wp.owner]
@@ -355,9 +360,6 @@ async function renderWorkproducts(data) {
 
       html += `
           <div class="wp-card">
-            <div class="wp-card-top">
-              ${phaseHtml}
-            </div>
             <h3 class="wp-name">${wp.name}</h3>
             <p class="wp-desc">${wp.description}</p>
             <div class="wp-owner">Owner: ${ownerHtml}</div>

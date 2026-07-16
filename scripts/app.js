@@ -150,8 +150,8 @@ async function loadPage(item) {
   // and artifact-graph) each get their own rendered HTML cache entry.
   const cacheKey = item.id;
 
-  // Check cache — graph page must re-init D3 every time (DOM is recreated)
-  if (MD_CACHE[cacheKey] && item.id !== 'artifact-graph') {
+  // Check cache — graph and phases pages must re-init their JS every time (DOM is recreated)
+  if (MD_CACHE[cacheKey] && item.id !== 'artifact-graph' && item.id !== 'phases') {
     container.innerHTML = `<div class="md-content">${MD_CACHE[cacheKey]}</div>`;
     window.scrollTo(0, 0);
     return;
@@ -218,20 +218,18 @@ async function renderYaml(id, data) {
 function renderPhases(data) {
   const phases = data.phases || [];
 
-  let html = `
-    <div class="yaml-page-header">
-      <h1>${data.title}</h1>
-      <p class="yaml-description">${data.description || ''}</p>
-    </div>
-    <div class="phase-timeline">`;
+  // ── Tab strip ──────────────────────────────────────────────
+  let tabsHtml = '';
+  let panelsHtml = '';
 
-  phases.forEach(phase => {
-    const activitiesHtml = (phase.activities || [])
-      .map(a => `<li>${a}</li>`).join('');
-    const deliverablesHtml = (phase.deliverables || [])
-      .map(d => `<li>${d}</li>`).join('');
-    const exitHtml = (phase.exit_criteria || [])
-      .map(e => `<li>${e}</li>`).join('');
+  phases.forEach((phase, idx) => {
+    const isFirst  = idx === 0;
+    const panelId  = `phase-panel-${idx}`;
+    const tabId    = `phase-tab-${idx}`;
+
+    const activitiesHtml    = (phase.activities || []).map(a => `<li>${a}</li>`).join('');
+    const deliverablesHtml  = (phase.deliverables || []).map(d => `<li>${d}</li>`).join('');
+    const exitHtml          = (phase.exit_criteria || phase.quality_gates || []).map(e => `<li>${e}</li>`).join('');
 
     // Optional: modernization strategy table
     let strategyHtml = '';
@@ -240,7 +238,7 @@ function renderPhases(data) {
         .map(s => `<tr><td>${s.strategy}</td><td>${s.applications}</td><td>${s.percentage}</td></tr>`)
         .join('');
       strategyHtml = `
-        <div class="phase-section">
+        <div class="phase-section phase-section--full">
           <h4>Modernization Strategy Distribution</h4>
           <table class="yaml-table">
             <thead><tr><th>Strategy</th><th>Applications</th><th>% of Portfolio</th></tr></thead>
@@ -255,33 +253,73 @@ function renderPhases(data) {
       const items = phase.data_domains
         .map(d => `<li><strong>${d.name}</strong> — ${d.description}</li>`).join('');
       domainsHtml = `
-        <div class="phase-section">
+        <div class="phase-section phase-section--full">
           <h4>Data Domains</h4>
           <ol>${items}</ol>
         </div>`;
     }
 
-    html += `
-      <div class="phase-card">
-        <div class="phase-card-header">
-          <div class="phase-number">Phase ${phase.number}</div>
-          <div class="phase-title-block">
-            <h2 class="phase-name">${phase.name}</h2>
-          </div>
+    tabsHtml += `
+      <button class="phase-tab${isFirst ? ' active' : ''}"
+              role="tab"
+              id="${tabId}"
+              aria-controls="${panelId}"
+              aria-selected="${isFirst ? 'true' : 'false'}"
+              data-phase-idx="${idx}">
+        <span class="phase-tab-number">Phase ${phase.number}</span>
+        <span class="phase-tab-name">${phase.name}</span>
+      </button>`;
+
+    panelsHtml += `
+      <div class="phase-panel${isFirst ? ' active' : ''}"
+           role="tabpanel"
+           id="${panelId}"
+           aria-labelledby="${tabId}">
+        <div class="phase-panel-title">
+          <span class="phase-badge">Phase ${phase.number}</span>
+          <h2 class="phase-panel-name">${phase.name}</h2>
         </div>
         <p class="phase-objective">${phase.objective}</p>
         <div class="phase-grid">
-          ${activitiesHtml ? `<div class="phase-section"><h4>Key Activities</h4><ul>${activitiesHtml}</ul></div>` : ''}
+          ${activitiesHtml   ? `<div class="phase-section"><h4>Key Activities</h4><ul>${activitiesHtml}</ul></div>`  : ''}
           ${deliverablesHtml ? `<div class="phase-section"><h4>Deliverables</h4><ul>${deliverablesHtml}</ul></div>` : ''}
         </div>
         ${strategyHtml}
         ${domainsHtml}
-        ${exitHtml ? `<div class="phase-exit"><h4>Exit Criteria</h4><ul>${exitHtml}</ul></div>` : ''}
+        ${exitHtml ? `<div class="phase-exit"><h4>Quality Gates / Exit Criteria</h4><ul>${exitHtml}</ul></div>` : ''}
       </div>`;
   });
 
-  html += `</div>`;
-  return html;
+  const html = `
+    <div class="yaml-page-header">
+      <h1>${data.title}</h1>
+      <p class="yaml-description">${data.description || ''}</p>
+    </div>
+    <div class="phase-tabs-wrapper">
+      <div class="phase-tab-list" role="tablist" aria-label="Program phases">
+        ${tabsHtml}
+      </div>
+      ${panelsHtml}
+    </div>`;
+
+  return { html, init: initPhaseTabs };
+}
+
+function initPhaseTabs() {
+  const wrapper = document.querySelector('.phase-tabs-wrapper');
+  if (!wrapper) return;
+  wrapper.querySelectorAll('.phase-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const idx = tab.dataset.phaseIdx;
+      wrapper.querySelectorAll('.phase-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.phaseIdx === idx);
+        t.setAttribute('aria-selected', t.dataset.phaseIdx === idx ? 'true' : 'false');
+      });
+      wrapper.querySelectorAll('.phase-panel').forEach((p, i) => {
+        p.classList.toggle('active', String(i) === idx);
+      });
+    });
+  });
 }
 
 async function renderWorkproducts(data) {

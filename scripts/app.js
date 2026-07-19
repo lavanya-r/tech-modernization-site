@@ -18,7 +18,7 @@ const NAV_SECTIONS = [
       { id: 'phases',       label: 'Program Phases',        icon: '▶',  file: 'content/04-phases.yaml' },
       { id: 'workproducts', label: 'Work Products',         icon: '◑',  file: 'content/11-workproducts.yaml' },
       { id: 'roles',        label: 'Roles',                 icon: '◈',  file: 'content/roles.yaml' },
-      { id: 'artifact-graph', label: 'Artifact Flow Graph', icon: '⬡',  file: 'content/11-workproducts.yaml' },
+      { id: 'artifact-graph', label: 'Artefact Flow Graph', icon: '⬡',  file: 'content/11-workproducts.yaml' },
     ]
   },
   {
@@ -215,37 +215,38 @@ async function renderYaml(id, data) {
   return `<h1>${data.title || id}</h1><pre class="yaml-raw">${jsyaml.dump(data)}</pre>`;
 }
 
-// ── Normalise a name for fuzzy matching (lowercase, strip punctuation/extra spaces) ──
+// ── Normalise a name for fuzzy matching (lowercase, alphanumeric+space only) ──
 function _normName(s) {
   return s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 // ── Build artefact lookup map from workproducts registry ──
-// Returns Map<normalisedName, { id, name, desc }>
-// Also indexes "contains" matches so "Component Model (Physical)" hits "Component Model"
+// desc falls back to joining the `includes` list when no explicit desc is present
 function _buildArtefactLookup(wpData) {
   const map = new Map();
   for (const art of (wpData.artefacts || [])) {
     const norm = _normName(art.name);
-    const entry = { id: art.id, name: art.name, desc: art.desc || art.description || '' };
-    map.set(norm, entry);
+    let desc = art.desc || art.description || '';
+    if (!desc && art.includes && art.includes.length) {
+      desc = 'Includes: ' + art.includes.join('; ');
+    }
+    map.set(norm, { id: art.id, name: art.name, desc });
   }
   return map;
 }
 
-// ── Find the best matching registry entry for a phase artefact name ──
-// Priority: 1) exact norm match  2) registry name is contained in phase name  3) phase name is contained in registry name
+// ── Find best matching registry entry for a phase artefact name ──
+// Priority: 1) exact normalised match  2) containment either way
 function _matchArtefact(phaseName, lookup) {
   const norm = _normName(phaseName);
   if (lookup.has(norm)) return lookup.get(norm);
-  // try containment both ways
   for (const [key, entry] of lookup) {
     if (norm.includes(key) || key.includes(norm)) return entry;
   }
   return null;
 }
 
-// ── Render a single artefact <li> with optional info icon + tooltip ──
+// ── Render a single artefact <li> — with info icon+tooltip if matched ──
 function _artefactLi(name, lookup) {
   const match = _matchArtefact(name, lookup);
   if (!match || !match.desc) return `<li>${name}</li>`;
@@ -389,7 +390,7 @@ function initPhaseTabs() {
 async function renderWorkproducts(data) {
   // Build artifact lookup map: id → name
   const artifactMap = {};
-  (data.artifacts || []).forEach(a => { artifactMap[a.id] = a.name; });
+  (data.artefacts || []).forEach(a => { artifactMap[a.id] = a.name; });
 
   // Fetch and build a phase lookup map from 04-phases.yaml
   let phaseMap = {};
@@ -449,8 +450,8 @@ async function renderWorkproducts(data) {
           : `<li><span class="art-id">${id}</span> ${id}</li>`
         ).join('');
 
-      const inputsHtml  = resolveArtifacts(wp.input_artifacts);
-      const outputsHtml = resolveArtifacts(wp.artifacts);
+      const inputsHtml  = resolveArtifacts(wp.input_artefacts);
+      const outputsHtml = resolveArtifacts(wp.artefacts);
 
       // Resolve owner role-id → display name with link to roles page
       const ownerName = roleMap[wp.owner] || wp.owner;
@@ -543,7 +544,7 @@ async function renderRoles(data) {
 
 /* ── Artifact Flow Graph (D3 force-directed) ────────────────────────────── */
 function renderArtifactGraph(data) {
-  const artifacts = data.artifacts || [];
+  const artifacts = data.artefacts || [];
 
   // ── Determine category group from id prefix ──────────────────────────────
   const GROUP_RULES = [
@@ -597,7 +598,7 @@ function renderArtifactGraph(data) {
   const links = [];
   const nodeIds = new Set(nodes.map(n => n.id));
   artifacts.forEach(a => {
-    (a.input_artifacts || []).forEach(srcId => {
+    (a.input_artefacts || []).forEach(srcId => {
       if (nodeIds.has(srcId)) {
         links.push({ source: srcId, target: a.id });
       }
@@ -621,7 +622,7 @@ function renderArtifactGraph(data) {
   // ── Container HTML ────────────────────────────────────────────────────────
   const html = `
     <div class="yaml-page-header">
-      <h1>Artifact Flow Graph</h1>
+      <h1>Artefact Flow Graph</h1>
       <p class="yaml-description">
         Force-directed dependency graph of all ${nodes.length} artifacts in the registry.
         Edges represent <em>input_artifact</em> relationships — an arrow points from a

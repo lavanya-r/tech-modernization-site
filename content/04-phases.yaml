@@ -8,48 +8,91 @@ phases:
   - id: phase-disco
     number: 1
     name: Discovery
-    objective: Gather current state IT information and develop target state requirements.
+    objective: Gather current state IT information and Develop target state requirements.
     activities:
       - Gather Current State IT environment details through interviews, workshops and document analysis
       - Conduct code analysis using AI tools
       - Baseline Current State findings 
-      - Establish To-Be state Statement of Requirements
-      - Develop User Stories with Acceptance criteria
-    deliverables:
+      - Establish and Baseline To-Be Statement of Requirements (Functional, Non-functional)
+      - Baseline existing constraints, standards & guidelines (IT / domain application specific standards)
+    artefacts:
       - Current State Assessment
-      - To-Be Requirements (Functional, Non-Functional)
-      - User Stories
-    quality_gates:
-      - Business Requirements Review (BRR)
-      - System Requirements Review (SRR)
-
-  - id: phase-hld
-    number: 2
-    name: High Level Design
-    objective: Develop High level solution architecture and design blueprint
-    activities:
-      - "Data center consolidation: decommission 8 of 14 on-premise data centers"
-      - Deploy cloud landing zones (AWS GovCloud / Azure Government) per agency
-      - Implement Zero Trust network segmentation and identity foundation (IAM/PAM)
-      - Migrate Tier-3 and Tier-4 (low-criticality) workloads
-      - Deploy enterprise monitoring, logging, and SIEM platform
-      - Establish API gateway and integration platform
+      - Code Analysis (using ARC)
+      - As-is IT System Baseline
+      - Requirements
+      - Non functional Requirements
+      - Security & Privacy Requirements
+      - Business Intelligence Requirements
+      - User Story
+      - System Context
+      - Standards      
+      - RAID Log
     deliverables:
-      - tbd
-    quality_gates:
-      - Prelimineray Design Review (PDR)
+      - User Story 
+    internal_quality_gates:
+      - Business Requirements Review (BRR) Results
+      - System Requirements Review (SRR) Results
+    client_quality_gates:
+      - DDA Advisory (recommended)
+    AI_SDLC: 
+      - IBM Watson ARC 
+      - IBM Consulting Advantage (ICA) SDLC Assistant Packs - Business Analysis
 
-  - id: phase-lld
+  - id: phase-alpha-hld
+    number: 2
+    name: Alpha - High Level Design 
+    objective: Develop High level solution architecture and design prototype
+    activities:
+      - Develop Solution Architecture 
+      - Establish Architecture Decisions (Front End, Back End, Integration, Data, Operational)
+      - Develop Component Model 
+        - Identify list of all components and their relationships
+        - Specify list of Component interfaces (Logical)
+        - Decide Component realization (implementation) choice
+        - Specify component level Logging, Monitoring and alerting needs
+      - Develop Business Rules
+      - Establish API gateway and integration platform
+    artefacts:
+      - Architecture Overview
+      - Architecture Decisions  
+      - Component Model
+      - Business Rules
+      - Interface Catalogue 
+      - Interface Specification
+      - Data Model
+      - Operational Model
+      - RAID Log
+    deliverables: 
+      - High Level design
+    internal_quality_gates:
+      - Technical Design Authority (TDA) for Architecture Decisions
+      - Prelimineray Design Review (PDR)
+      - Critical Design Review (CDR)
+    client_quality_gates:
+      - Digital Design Authority (DDA) Review
+    AI_SDLC: 
+      - IBM Consulting Advantage (ICA) SDLC Assistant Packs - ArchReview
+
+  - id: phase-beta-lld
     number: 3
-    name: Low Level Design
+    name: Alpha - Low Level Design
     objective: Develop Low Level Design
     activities:
       - Execute Application Rationalization Plan (Retain / Retire / Rehost / Replatform / Refactor / Replace)
       - Migrate all Tier-1 mission-critical systems using targeted modernization strategies
-      - "Decommission 180+ legacy applications identified for retirement"
       - Build/deploy replacement microservices for core business functions
       - Implement event-driven architecture for high-throughput systems
+    artefacts:
+      - Component Model (Physical)
+      - Operational Model (Physical)
+      - Wireframe Specification
+      - RAID Log (updated)
+      - Architecture Decisions Register (updated)
     deliverables:
-      - tbd
-    quality_gates:
+      - Low Level Design
+    internal_quality_gates:
       - Critical Design Review (CDR)
+    client_quality_gates:
+      - Digital Design Authority(DDA) Review
+    AI_SDLC: 
+      - tbd

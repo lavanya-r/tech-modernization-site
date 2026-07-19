@@ -3,10 +3,10 @@ description: >
   Key deliverables produced across Architecture, Design, Engineering, and Quality Assurance
   disciplines throughout the program lifecycle.
 
-# ── Artifact Registry ────────────────────────────────────────────────────────
-# Every unique artifact referenced by any work product is declared here.
-# Use artifact_id values in workproduct 'artifacts' (outputs) and 'input_artifacts'.
-artifacts:
+# ── artefact Registry ────────────────────────────────────────────────────────
+# Every unique artefact referenced by any work product is declared here.
+# Use artefact_id values in workproduct 'artefacts' (outputs) and 'input_artefacts'.
+artefacts:
   # Assessment outputs
   - id: ASIS_NOID
     name: Current State Assessment
@@ -20,24 +20,24 @@ artifacts:
     desc: The System Context work product initially represents the entire system as a single object or process and identifies the interfaces between the system and external entities.
   - id: ART 0647
     name: Requirements
-    desc: This artifact documents the description of features or capabilities, intended behavior, performance etc. required by stakeholders for the agreed solution or service.
-    input_artifacts:
+    desc: This artefact documents the description of features or capabilities, intended behavior, performance etc. required by stakeholders for the agreed solution or service.
+    input_artefacts:
       - ASIS_NOID
       - ASIS_NOID2
       - ASIS_NOID3
   - id: OPS 315
     name: Security & Privacy Requirements
-    desc: This artifact captures requirements across Administration, Asset Protection, Authorization, Accountability, Availability and Assurance.
+    desc: This artefact captures requirements across Administration, Asset Protection, Authorization, Accountability, Availability and Assurance.
   - id: ART 0647-sub
     name: Business Intelligence Requirements
     desc: This artifcat captures Business Intelligence requirements
   - id: ART 0507
     name: Non-functional Requirements
-    desc: This artifact captures quality attributes and constraints.
+    desc: This artefact captures quality attributes and constraints.
   - id: ART 0650
     name: User Story
-    desc: This artifact captures a concise, written description of a piece of intended functionality that has value to a user role of the system under development. This artifact also captures the stakeholders conditions of satisfaction about that piece of functionality.    
-    input_artifacts:
+    desc: This artefact captures a concise, written description of a piece of intended functionality that has value to a user role of the system under development. This artefact also captures the stakeholders conditions of satisfaction about that piece of functionality.    
+    input_artefacts:
       - ART 0647    
       - ART 0647-sub      
   # Architecture outputs
@@ -46,20 +46,22 @@ artifacts:
     desc: The Standards work product lists and details pre-determined standards for a defined scope of the business and the information technology environment.
   - id: ART 0512
     name: Architecture Overview
+    desc: This artifact provides an overview of the main conceptual elements and relationships of an architecture including its major building blocks.
     includes:
       - Overall | Application Architecture view
       - Integration Architecture view
       - Data Architecture view
       - Infrastructure Architecture view
-    input_artifacts:
+    input_artefacts:
       - ART 0651
       - ART 0647
       - ART 0507    
   - id: ART 0513
-    name: Architecture Decision Records (ADRs) 
+    name: Architecture Decisions
+    desc: Documents key decisions about the architecture and the rationale behind those decisions.
     includes:
       - Problem, Options, Decision, Rationale, Derived Requirement and Implication   
-    input_artifacts:
+    input_artefacts:
       - ART 0651
       - ART 0647
       - ART 0507
@@ -72,46 +74,49 @@ artifacts:
       - Specification (WHAT are their interfaces, Pre-Post conditions )
       - Realization (HOW to realize this component - Implementation choice)
       - Component Interaction Diagrams (Dynamic view of how components interact)
-    input_artifacts: 
+    input_artefacts: 
       - ART 0647
       - ART 0512 
       - ART 0513      
       - ART 0505     
   - id: ART 0522
     name: Operational Model
-    desc: This artifact describes the required operational characteristics and capabilities of the IT solution architecture with prime focus on the non-Functional characteristics.    
-    input_artifacts:
+    desc: This artefact describes the required operational characteristics and capabilities of the IT solution architecture with prime focus on the non-Functional characteristics.    
+    input_artefacts:
       - ART 0512
       - ART 0513
       - ART 0507
       - ART 0651
   - id: ART 0505
     name: Business Rules
-    desc: This artifact expresses policies and constraints that apply to the business.    
+    desc: This artefact expresses policies and constraints that apply to the business.    
   - id: ART 0519
     name: Data Model
-    desc: This artifact describes logical entities, attributes identifying and describing those entities, and the relationships between them.      
-    input_artifacts:
+    desc: This artefact describes logical entities, attributes identifying and describing those entities, and the relationships between them.      
+    input_artefacts:
       - ART 0515
   - id: OPS 316
     name: Security Architecture
     desc: A Security Architecture work product documents the structure, capabilities and components of the solution in a manner that is independent of specific vendor products and services.    
-    input_artifacts: 
+    input_artefacts: 
       - OPS 315
   # Design outputs
   - id: APP 148
-    name: User Interface Design Specification  
+    name: User Interface Design Specification 
+    desc: The primary purpose of the User Interface Design Specification is to communicate detailed guidance to the developers concerning the user interface to be implemented. 
   - id: APP 0730
     name: Wireframes
+    desc: The purpose of the wireframes is for a skeletal visual representation of what the end product will look like and is to communicate features a page will contain.
   - id: APP 030
     name: Interface Specification   
-    desc: This artifact describes the interfaces between the various programs that comprise an application as well as between that application and external systems.
+    desc: This artefact describes the interfaces between the various programs that comprise an application as well as between that application and external systems.
   - id: APP 030-sub 
     name: Interface Catalogue
     desc: This work product provides a single Catalogue of all the external and internal interfaces for a solution, covering all component-to-component interactions and providing references or links to the interface definitions.
   - id: CUST DDD 
     name: DevSecOps Design Document
-    input_artifacts:
+    desc: Involves a comprehensive document that outlines the architecture, processes, tools, and security considerations for implementing DevSecOps practices within an organization development lifecycle.
+    input_artefacts:
       - ART 0522
       - ART 0515
   - id: APP 017
@@ -123,17 +128,17 @@ artifacts:
       - Data migration schedule
       - Data migration process
       - Resources and technology required
-    input_artifacts:
+    input_artefacts:
       - ART 0519
   - id: ART 0521
     name: Data Migration Specification
-    desc: This artifact describes data sources to be migrated, and specifies the mapping as well as any required data transformation processes between the source data and the target data.
+    desc: This artefact describes data sources to be migrated, and specifies the mapping as well as any required data transformation processes between the source data and the target data.
     includes: 
       - Migration scope
       - Data Profiles (sources, targets, attributes and dependencies)
       - Data mapping
       - Data transformation processes
-    input_artifacts: 
+    input_artefacts: 
       - APP 017
   # Engineering outputs
   - id: art-040
@@ -141,6 +146,7 @@ artifacts:
   # Quality Assurance outputs
   - id: art-042
     name: Test Strategy Document
+    desc: This artifact outlines the approach to be used to ensure that the critical attributes of the system are tested adequately.
   - id: art-043
     name: Test Environment Matrix
   # Lifecycle outputs
@@ -170,18 +176,18 @@ categories:
         description: Current state assessment of one or more existing systems. This involves gathering and analyzing data from a variety of sources, including interviews with stakeholders, documentation reviews, process mapping, and code/data analysis.
         owner: role-lead-business-analyst
         supporting: role-lead-architect, role-forward-deployed-engineer
-        input_artifacts:
+        input_artefacts:
           - ASIS_NOID
           - ASIS_NOID2
-        artifacts:
+        artefacts:
           - ASIS_NOID3
 
       - name: Establish Target system Requirements
         description: Gather to-be state requirements that includes process flow, functional and non-functional requirements.
         owner: role-lead-business-analyst
-        input_artifacts:
+        input_artefacts:
           - ASIS_NOID3
-        artifacts:
+        artefacts:
           - ART 0651
           - ART 0647
           - ART 0507          
@@ -200,34 +206,34 @@ categories:
       - name: Overall Architecture
         description: Develop overall Architecture view of the legacy system
         owner: role-lead-architect
-        input_artifacts:
+        input_artefacts:
           - ART 0647
           - ART 0507
           - ART 0651
           - ASIS_NOID3
-        artifacts:
+        artefacts:
           - ART 0512
           - ART 0513
       - name: Application Architecture
         phase_id: phase-hld
         description: Application design to meet functional requirements
         owner: role-application-design-lead
-        input_artifacts:
+        input_artefacts:
           - ART 0647
           - ART 0507
           - ART 0512
-        artifacts:
+        artefacts:
           - ART 0513
           - ART 0515
           - ART 0505
       - name: Integration Architecture
         description: Integration architecture for external and internal integration 
         owner: role-integration-architect
-        input_artifacts:
+        input_artefacts:
           - ART 0647
           - ART 0507
           - ART 0512        
-        artifacts:
+        artefacts:
           - ART 0513
           - ART 0512         
 
@@ -245,11 +251,11 @@ categories:
         phase_id: phase-1
         description: Fully operational CI/CD and SecOps platform supporting all ARTs — GitLab, SonarQube, Prisma Cloud, Terraform.
         owner: role-platform-engineering-lead
-        input_artifacts:
+        input_artefacts:
           - art-023
           - art-024
           - art-025
-        artifacts:
+        artefacts:
           - art-029
           - art-030
           - art-031
@@ -258,10 +264,10 @@ categories:
         phase_id: phase-2
         description: Repeatable migration runbooks for Rehost, Replatform, and Refactor patterns used across 300+ applications.
         owner: role-migration-engineering-lead
-        input_artifacts:
+        input_artefacts:
           - art-004
           - art-002
-        artifacts:
+        artefacts:
           - art-032
           - art-033
           - art-034
@@ -271,10 +277,10 @@ categories:
         phase_id: phase-2
         description: Government-wide Identity and Access Management rollout with MFA enforcement for 100% of federal staff.
         owner: role-identity-engineering-lead
-        input_artifacts:
+        input_artefacts:
           - art-006
           - art-007
-        artifacts:
+        artefacts:
           - art-036
           - art-037
           - art-038
@@ -283,10 +289,10 @@ categories:
         phase_id: phase-3
         description: Standardised microservices chassis (containers, service mesh, observability) for modernized core business systems.
         owner: role-application-engineering-lead
-        input_artifacts:
+        input_artefacts:
           - art-010
           - art-012
-        artifacts:
+        artefacts:
           - art-039
           - art-040
           - art-041

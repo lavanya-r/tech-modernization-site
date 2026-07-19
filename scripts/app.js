@@ -207,7 +207,7 @@ function buildSkeleton() {
 
 /* ── YAML Renderers ─────────────────────────────────────────────────────── */
 async function renderYaml(id, data) {
-  if (id === 'phases') return renderPhases(data);
+  if (id === 'phases') return await renderPhases(data);
   if (id === 'workproducts') return await renderWorkproducts(data);
   if (id === 'roles') return await renderRoles(data);
   if (id === 'artifact-graph') return renderArtifactGraph(data);
@@ -215,7 +215,56 @@ async function renderYaml(id, data) {
   return `<h1>${data.title || id}</h1><pre class="yaml-raw">${jsyaml.dump(data)}</pre>`;
 }
 
-function renderPhases(data) {
+// ── Normalise a name for fuzzy matching (lowercase, strip punctuation/extra spaces) ──
+function _normName(s) {
+  return s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// ── Build artefact lookup map from workproducts registry ──
+// Returns Map<normalisedName, { id, name, desc }>
+// Also indexes "contains" matches so "Component Model (Physical)" hits "Component Model"
+function _buildArtefactLookup(wpData) {
+  const map = new Map();
+  for (const art of (wpData.artefacts || [])) {
+    const norm = _normName(art.name);
+    const entry = { id: art.id, name: art.name, desc: art.desc || art.description || '' };
+    map.set(norm, entry);
+  }
+  return map;
+}
+
+// ── Find the best matching registry entry for a phase artefact name ──
+// Priority: 1) exact norm match  2) registry name is contained in phase name  3) phase name is contained in registry name
+function _matchArtefact(phaseName, lookup) {
+  const norm = _normName(phaseName);
+  if (lookup.has(norm)) return lookup.get(norm);
+  // try containment both ways
+  for (const [key, entry] of lookup) {
+    if (norm.includes(key) || key.includes(norm)) return entry;
+  }
+  return null;
+}
+
+// ── Render a single artefact <li> with optional info icon + tooltip ──
+function _artefactLi(name, lookup) {
+  const match = _matchArtefact(name, lookup);
+  if (!match || !match.desc) return `<li>${name}</li>`;
+  const safeDesc = match.desc.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const safeId   = match.id.replace(/</g, '&lt;');
+  return `<li><span class="art-item">${name}<span class="art-info" tabindex="0" aria-label="${match.name}: ${safeDesc}"><i class="art-info-icon">i</i><span class="art-tooltip"><span class="art-tooltip-id">${safeId}</span><br/>${safeDesc}</span></span></span></li>`;
+}
+
+async function renderPhases(data) {
+  // Fetch artefact registry from workproducts yaml for tooltip lookup
+  let artefactLookup = new Map();
+  try {
+    const resp = await fetch('content/11-workproducts.yaml');
+    if (resp.ok) {
+      const wpData = jsyaml.load(await resp.text());
+      artefactLookup = _buildArtefactLookup(wpData);
+    }
+  } catch (_) { /* tooltips optional — fail silently */ }
+
   const phases = data.phases || [];
 
   // ── Tab strip ──────────────────────────────────────────────
@@ -227,9 +276,11 @@ function renderPhases(data) {
     const panelId  = `phase-panel-${idx}`;
     const tabId    = `phase-tab-${idx}`;
 
-    const activitiesHtml    = (phase.activities || []).map(a => `<li>${a}</li>`).join('');
-    const deliverablesHtml  = (phase.deliverables || []).map(d => `<li>${d}</li>`).join('');
-    const exitHtml          = (phase.exit_criteria || phase.quality_gates || []).map(e => `<li>${e}</li>`).join('');
+    const activitiesHtml       = (phase.activities || []).map(a => `<li>${a}</li>`).join('');
+    const artefactsHtml        = (phase.artefacts || []).map(a => _artefactLi(a, artefactLookup)).join('');
+    const deliverablesHtml     = (phase.deliverables || []).map(d => `<li>${d}</li>`).join('');
+    const internalGatesHtml    = (phase.internal_quality_gates || []).map(g => `<li>${g}</li>`).join('');
+    const clientGatesHtml      = (phase.client_quality_gates || []).map(g => `<li>${g}</li>`).join('');
 
     // Optional: modernization strategy table
     let strategyHtml = '';
@@ -270,6 +321,21 @@ function renderPhases(data) {
         <span class="phase-tab-name">${phase.name}</span>
       </button>`;
 
+    const artefactsDeliverables = (artefactsHtml || deliverablesHtml) ? `
+      <div class="phase-artifacts-deliverables">
+        ${artefactsHtml    ? `<div class="phase-ad-col phase-ad-col--artefacts"><div class="phase-section-label">Artefacts</div><ul>${artefactsHtml}</ul></div>`       : ''}
+        ${deliverablesHtml ? `<div class="phase-ad-col phase-ad-col--deliverables"><div class="phase-section-label">Deliverables</div><ul>${deliverablesHtml}</ul></div>` : ''}
+      </div>` : '';
+
+    const governanceHtml = (internalGatesHtml || clientGatesHtml) ? `
+      <div class="phase-governance-section">
+        <div class="phase-governance-title">Governance</div>
+        <div class="phase-governance-grid">
+          ${internalGatesHtml ? `<div class="phase-gov-col phase-gov-col--internal"><span class="phase-gov-col-label">Internal Quality Gates</span><ul>${internalGatesHtml}</ul></div>` : ''}
+          ${clientGatesHtml   ? `<div class="phase-gov-col phase-gov-col--client"><span class="phase-gov-col-label">Client Quality Gates</span><ul>${clientGatesHtml}</ul></div>`       : ''}
+        </div>
+      </div>` : '';
+
     panelsHtml += `
       <div class="phase-panel${isFirst ? ' active' : ''}"
            role="tabpanel"
@@ -280,13 +346,11 @@ function renderPhases(data) {
           <h2 class="phase-panel-name">${phase.name}</h2>
         </div>
         <p class="phase-objective">${phase.objective}</p>
-        <div class="phase-grid">
-          ${activitiesHtml   ? `<div class="phase-section"><h4>Key Activities</h4><ul>${activitiesHtml}</ul></div>`  : ''}
-          ${deliverablesHtml ? `<div class="phase-section"><h4>Deliverables</h4><ul>${deliverablesHtml}</ul></div>` : ''}
-        </div>
+        ${activitiesHtml ? `<div class="phase-activities-section"><div class="phase-section-label">Key Activities</div><ul>${activitiesHtml}</ul></div>` : ''}
+        ${artefactsDeliverables}
         ${strategyHtml}
         ${domainsHtml}
-        ${exitHtml ? `<div class="phase-exit"><h4>Quality Gates / Exit Criteria</h4><ul>${exitHtml}</ul></div>` : ''}
+        ${governanceHtml}
       </div>`;
   });
 

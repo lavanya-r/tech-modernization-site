@@ -95,6 +95,10 @@ artefacts:
     desc: This artefact describes logical entities, attributes identifying and describing those entities, and the relationships between them.      
     input_artefacts:
       - ART 0515
+      - APP 027
+  - id: APP 027
+    name: Report Specification
+    desc: Report Specifications describe new reports and enhancements to existing reports to be produced by the application.
   - id: OPS 316
     name: Security Architecture
     desc: A Security Architecture work product documents the structure, capabilities and components of the solution in a manner that is independent of specific vendor products and services.    
@@ -140,18 +144,22 @@ artefacts:
       - Data transformation processes
     input_artefacts: 
       - APP 017
-  # Engineering outputs
-  - id: art-040
-    name: Container Standards Guide
   # Quality Assurance outputs
-  - id: art-042
-    name: Test Strategy Document
-    desc: This artifact outlines the approach to be used to ensure that the critical attributes of the system are tested adequately.
-  - id: art-043
-    name: Test Environment Matrix
+  - id: ART 0651
+    name: Test Strategy
+    desc: This artifact defines the goals and objectives fro testing as well as the overall approach for how the test effort will be conducted to achieve those results.
+  - id: APP 133
+    name: Master Test Plan
+    desc: The Master Test Plan documents the "what" (scope and objectives), the "why" (purpose), the "when" (key milestones), and the "who" (organizational roles and responsibilities) for all levels of dynamic testing.
+    input_artefacts:
+      - ART 0651
   # Lifecycle outputs
   - id: APP 402
     name: Requirements Traceability Verification Matrix
+    desc: This document traces the requirements through the project design, development and test.
+  - id: NONE
+    name: RAID Log
+    desc: The Risk Action Issue Decision (RAID) Log is used to capture risks, issues/impediments, actions & key decisions that are generated throughout the project.    
   # Quality Gate outputs
   - id: ENG 418
     name: Business Requirements Review Results

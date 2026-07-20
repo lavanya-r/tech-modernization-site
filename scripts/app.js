@@ -231,16 +231,30 @@ function _normName(s) {
 }
 
 // ── Build artefact lookup map from workproducts registry ──
-// desc falls back to joining the `includes` list when no explicit desc is present
+// desc falls back to joining the `includes` list when no explicit desc is present.
+// Also registers a naive plural/singular variant so "User Stories" matches "User Story".
 function _buildArtefactLookup(wpData) {
   const map = new Map();
+  function _pluralVariants(norm) {
+    const variants = [];
+    if (norm.endsWith('ies')) variants.push(norm.slice(0, -3) + 'y');   // stories → story
+    else if (norm.endsWith('y')) variants.push(norm.slice(0, -1) + 'ies'); // story → stories
+    else if (norm.endsWith('s')) variants.push(norm.slice(0, -1));        // matrices → matrix (best-effort)
+    else variants.push(norm + 's');                                        // plan → plans
+    return variants;
+  }
   for (const art of (wpData.artefacts || [])) {
     const norm = _normName(art.name);
     let desc = art.desc || art.description || '';
     if (!desc && art.includes && art.includes.length) {
       desc = 'Includes: ' + art.includes.join('; ');
     }
-    map.set(norm, { id: art.id, name: art.name, desc });
+    const entry = { id: art.id, name: art.name, desc };
+    map.set(norm, entry);
+    // Register plural/singular variants pointing to the same entry
+    for (const v of _pluralVariants(norm)) {
+      if (!map.has(v)) map.set(v, entry);
+    }
   }
   return map;
 }
@@ -257,12 +271,15 @@ function _matchArtefact(phaseName, lookup) {
 }
 
 // ── Render a single artefact <li> — with info icon+tooltip if matched ──
+// Shows the icon whenever there is a registry match (desc or id is sufficient).
 function _artefactLi(name, lookup) {
   const match = _matchArtefact(name, lookup);
-  if (!match || !match.desc) return `<li>${name}</li>`;
-  const safeDesc = match.desc.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  if (!match) return `<li>${name}</li>`;
+  const desc    = match.desc || '';
+  const safeDesc = desc.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const safeId   = match.id.replace(/</g, '&lt;');
-  return `<li><span class="art-item">${name}<span class="art-info" tabindex="0" aria-label="${match.name}: ${safeDesc}"><i class="art-info-icon">i</i><span class="art-tooltip"><span class="art-tooltip-id">${safeId}</span><br/>${safeDesc}</span></span></span></li>`;
+  const tipBody  = safeDesc || `Artefact ID: ${safeId}`;
+  return `<li><span class="art-item">${name}<span class="art-info" tabindex="0" aria-label="${match.name}: ${tipBody}"><i class="art-info-icon">i</i><span class="art-tooltip"><span class="art-tooltip-id">${safeId}</span>${safeDesc ? `<br/>${safeDesc}` : ''}</span></span></span></li>`;
 }
 
 async function renderPhases(data) {
@@ -298,7 +315,7 @@ async function renderPhases(data) {
       return `<li>${parent}${subHtml}</li>`;
     }).join('');
     const artefactsHtml        = (phase.artefacts || []).map(a => _artefactLi(a, artefactLookup)).join('');
-    const deliverablesHtml     = (phase.deliverables || []).map(d => `<li>${d}</li>`).join('');
+    const deliverablesHtml     = (phase.deliverables || []).map(d => _artefactLi(d, artefactLookup)).join('');
     const internalGatesHtml    = (phase.internal_quality_gates || []).map(g => `<li>${g}</li>`).join('');
     const clientGatesHtml      = (phase.client_quality_gates || []).map(g => `<li>${g}</li>`).join('');
 

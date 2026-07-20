@@ -71,7 +71,9 @@ phases:
       - Data Model
       - Data Migration Plan
       - Operational Model
-      - RAID Log
+      - Test Strategy
+      - Master Test Plan
+      - RAID Log      
     deliverables: 
       - High Level Design
       - Requirements Traceability Verification Matrix      
@@ -103,7 +105,7 @@ phases:
         - Detailed Specification of DataStores (e.g., Schemas, Tables with field name, length, constraints)
       - Details Business Intelligence & Analytics Design (if applicable)
         - Detailed Design for BI&A (e.g., Data Marts)
-        - Detailed Reporting specification with KPIs, Dashboards
+        - Detailed Report specification with KPIs, Dashboards
       - Detail Operational Model
         - Physical specification of Nodes along with Deployment Units
         - Full list of Bill of Materials (BoM) - Software, Services and Hardware (if applicable) 
@@ -125,7 +127,7 @@ phases:
       - Data Model (Revised)
       - Data Migration Specification
       - BI & Analytics Detailed Design
-      - Reporting Specification
+      - Report Specification
       - User Interface Design Specification      
       - Wireframe
       - Test Plan

@@ -776,7 +776,7 @@ function initArtifactGraph(nodes, links, PHASES, phaseNodes) {
     .attr('dy', '0.35em')
     .attr('fill', d => d.phaseColor)
     .text(d => {
-      if (!d.regId) return '?';
+      if (!d.regId) return 'NA';
       const parts = d.regId.split(/[\s\-_]/);
       return parts[parts.length - 1].slice(0, 5);
     });

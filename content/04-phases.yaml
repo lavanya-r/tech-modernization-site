@@ -13,8 +13,8 @@ phases:
       - Gather Current State IT environment details through interviews, workshops and document analysis
       - Conduct code analysis using AI tools
       - Baseline Current State findings 
-      - Establish and Baseline To-Be Statement of Requirements (Functional, Non-functional)
-      - Baseline existing constraints, standards & guidelines (IT / domain application specific standards)
+      - Gather and Baseline To-Be Statement of Requirements (Functional, Non-functional)
+      - Baseline constraints, standards & guidelines (IT / domain application specific standards) relevant for To-Be system
     artefacts:
       - Current State Assessment
       - Code Analysis (using ARC)
@@ -94,6 +94,10 @@ phases:
         - Detail Interface Specification with inputs, outputs, error code
         - Capture Logging, Monitoring and Alerting specification 
         - Map Components to relevant Business Rules
+      - Detail Business Rules
+        - Business Rule Groups with detailed definition of the Rule
+        - Detailed Rule definition (Unique Id, Name, Rule Type, specification)
+        - Mapping to the Business Process(es) where its applicable
       - Detail wireframe specification 
       - Develop Data Model (Physical)
         - Detailed Specification of DataStores (e.g., Schemas, Tables with field name, length, constraints)

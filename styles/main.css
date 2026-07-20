@@ -1453,13 +1453,19 @@ a:hover { text-decoration: underline; }
   transition: opacity 0.15s;
 }
 
+/* Phase box labels */
+.ag-phase-boxes text {
+  pointer-events: none;
+  font-family: var(--font-sans);
+}
+
 /* Node text */
 .ag-node-id {
   font-family: var(--font-mono);
-  font-size: 6px;
-  fill: #fff;
+  font-size: 6.5px;
+  /* fill is set dynamically per phase colour */
   pointer-events: none;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .ag-node-label {

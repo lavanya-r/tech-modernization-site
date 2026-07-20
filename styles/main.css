@@ -859,6 +859,15 @@ a:hover { text-decoration: underline; }
   color: var(--color-text);
   line-height: 1.8;
 }
+.activity-sub-list {
+  padding-left: 1.25rem;
+  margin-top: 0.15rem;
+  margin-bottom: 0.15rem;
+  list-style-type: circle;
+  font-size: 0.83rem;
+  color: var(--color-text-light);
+  line-height: 1.7;
+}
 
 /* ── Artefacts + Deliverables (2-col) ── */
 .phase-artifacts-deliverables {

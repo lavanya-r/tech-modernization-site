@@ -16,7 +16,6 @@ const NAV_SECTIONS = [
     label: 'Delivery',
     items: [
       { id: 'phases',       label: 'Program Phases',        icon: '▶',  file: 'content/04-phases.yaml' },
-      { id: 'workproducts', label: 'Work Products',         icon: '◑',  file: 'content/11-workproducts.yaml' },
       { id: 'roles',        label: 'Roles',                 icon: '◈',  file: 'content/roles.yaml' },
       { id: 'artifact-graph', label: 'Artefact Flow Graph', icon: '⬡',  file: 'content/11-workproducts.yaml' },
     ]
@@ -208,7 +207,6 @@ function buildSkeleton() {
 /* ── YAML Renderers ─────────────────────────────────────────────────────── */
 async function renderYaml(id, data) {
   if (id === 'phases') return await renderPhases(data);
-  if (id === 'workproducts') return await renderWorkproducts(data);
   if (id === 'roles') return await renderRoles(data);
   if (id === 'artifact-graph') return renderArtifactGraph(data);
   // Generic fallback: pretty-print as a <pre> block
@@ -277,7 +275,16 @@ async function renderPhases(data) {
     const panelId  = `phase-panel-${idx}`;
     const tabId    = `phase-tab-${idx}`;
 
-    const activitiesHtml       = (phase.activities || []).map(a => `<li>${a}</li>`).join('');
+    const activitiesHtml       = (phase.activities || []).map(a => {
+      // js-yaml folds indented sub-items into one string separated by " - "
+      const parts = String(a).split(' - ');
+      const parent = parts[0].trim();
+      const subs   = parts.slice(1).map(s => `<li>${s.trim()}</li>`);
+      const subHtml = subs.length
+        ? `<ul class="activity-sub-list">${subs.join('')}</ul>`
+        : '';
+      return `<li>${parent}${subHtml}</li>`;
+    }).join('');
     const artefactsHtml        = (phase.artefacts || []).map(a => _artefactLi(a, artefactLookup)).join('');
     const deliverablesHtml     = (phase.deliverables || []).map(d => `<li>${d}</li>`).join('');
     const internalGatesHtml    = (phase.internal_quality_gates || []).map(g => `<li>${g}</li>`).join('');
@@ -385,106 +392,6 @@ function initPhaseTabs() {
       });
     });
   });
-}
-
-async function renderWorkproducts(data) {
-  // Build artifact lookup map: id → name
-  const artifactMap = {};
-  (data.artefacts || []).forEach(a => { artifactMap[a.id] = a.name; });
-
-  // Fetch and build a phase lookup map from 04-phases.yaml
-  let phaseMap = {};
-  try {
-    const res = await fetch('content/04-phases.yaml');
-    if (res.ok) {
-      const phasesData = jsyaml.load(await res.text());
-      (phasesData.phases || []).forEach(p => { phaseMap[p.id] = p; });
-    }
-  } catch (_) { /* phases data unavailable — phase links will degrade gracefully */ }
-
-  // Fetch and build a roles lookup map: role-id → role name
-  let roleMap = {};
-  try {
-    const res = await fetch('content/roles.yaml');
-    if (res.ok) {
-      const rolesData = jsyaml.load(await res.text());
-      (rolesData.roles || []).forEach(r => { roleMap[r.id] = r.name; });
-    }
-  } catch (_) { /* roles data unavailable — owner will display as plain text */ }
-
-  const categories = data.categories || [];
-
-  let html = `
-    <div class="yaml-page-header">
-      <h1>${data.title}</h1>
-      <p class="yaml-description">${data.description || ''}</p>
-    </div>`;
-
-  categories.forEach(cat => {
-    const qgHtml = (cat.quality_gates || []).length
-      ? `<div class="wp-qg-card">
-           <div class="wp-qg-label">Quality Gates</div>
-           <ul class="wp-qg-list">
-             ${(cat.quality_gates).map(qg => `<li class="wp-qg-item"><span class="wp-qg-icon">✓</span>${qg}</li>`).join('')}
-           </ul>
-         </div>`
-      : '';
-
-    html += `
-      <div class="wp-category">
-        <div class="wp-category-header">
-          <span class="wp-category-icon">${cat.icon}</span>
-          <div>
-            <h2 class="wp-category-name">${cat.name}</h2>
-            ${cat.desc ? `<p class="wp-category-desc">${cat.desc}</p>` : ''}
-          </div>
-        </div>
-        ${qgHtml}
-        <div class="wp-grid">`;
-
-    (cat.workproducts || []).forEach(wp => {
-      // Resolve artifact IDs → names
-      const resolveArtifacts = (ids) =>
-        (ids || []).map(id => artifactMap[id]
-          ? `<li><span class="art-id">${id}</span> ${artifactMap[id]}</li>`
-          : `<li><span class="art-id">${id}</span> ${id}</li>`
-        ).join('');
-
-      const inputsHtml  = resolveArtifacts(wp.input_artefacts);
-      const outputsHtml = resolveArtifacts(wp.artefacts);
-
-      // Resolve owner role-id → display name with link to roles page
-      const ownerName = roleMap[wp.owner] || wp.owner;
-      const ownerHtml = roleMap[wp.owner]
-        ? `<a class="wp-owner-link" href="#roles"
-             onclick="event.preventDefault();navigateTo('roles');history.pushState(null,'','#roles');"
-             title="View role: ${ownerName}">${ownerName}</a>`
-        : ownerName;
-
-      html += `
-          <div class="wp-card">
-            <h3 class="wp-name">${wp.name}</h3>
-            <p class="wp-desc">${wp.description}</p>
-            <div class="wp-owner">Owner: ${ownerHtml}</div>
-            <div class="wp-io">
-              ${inputsHtml ? `
-              <div class="wp-io-col">
-                <div class="wp-io-label wp-io-label--in">Inputs</div>
-                <ul class="wp-io-list">${inputsHtml}</ul>
-              </div>` : ''}
-              ${outputsHtml ? `
-              <div class="wp-io-col">
-                <div class="wp-io-label wp-io-label--out">Outputs</div>
-                <ul class="wp-io-list">${outputsHtml}</ul>
-              </div>` : ''}
-            </div>
-          </div>`;
-    });
-
-    html += `</div></div>`;
-  });
-
-  return html;
 }
 
 /* ── Roles Renderer ─────────────────────────────────────────────────────── */

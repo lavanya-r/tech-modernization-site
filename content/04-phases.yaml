@@ -18,7 +18,6 @@ phases:
     artefacts:
       - Current State Assessment
       - Code Analysis (using ARC)
-      - As-is IT System Baseline
       - Requirements
       - Non functional Requirements
       - Security & Privacy Requirements
@@ -28,7 +27,9 @@ phases:
       - Standards      
       - RAID Log
     deliverables:
-      - User Story 
+      - As-is IT System Baseline
+      - To-Be System Requirements 
+      - User Stories 
     internal_quality_gates:
       - Business Requirements Review (BRR) Results
       - System Requirements Review (SRR) Results
@@ -45,13 +46,21 @@ phases:
     activities:
       - Develop Solution Architecture 
       - Establish Architecture Decisions (Front End, Back End, Integration, Data, Operational)
-      - Develop Component Model 
+      - Develop Component Model (Logical)
         - Identify list of all components and their relationships
         - Specify list of Component interfaces (Logical)
-        - Decide Component realization (implementation) choice
-        - Specify component level Logging, Monitoring and alerting needs
-      - Develop Business Rules
-      - Establish API gateway and integration platform
+        - Finalize Component realization (implementation) choice      
+        - Capture Business Rules for each component (if applicable)
+      - Develop user interface design including wireframe prototypes (if applicable)
+      - Develop Data Model (Logical)
+        - Identify list of logical entities and their relationships
+      - Develop Business Intelligence & Analytics Design (if applicable)
+      - Develop Operational Model
+        - Identify the Logical Locations, Logical Nodes, their relationships
+        - Specify Component placement in Nodes 
+        - Validate with interaction diagrams for architecturally significant usecases
+      - Develop Data Migration Strategy
+      - Develop Test Strategy        
     artefacts:
       - Architecture Overview
       - Architecture Decisions  
@@ -60,10 +69,12 @@ phases:
       - Interface Catalogue 
       - Interface Specification
       - Data Model
+      - Data Migration Plan
       - Operational Model
       - RAID Log
     deliverables: 
-      - High Level design
+      - High Level Design
+      - Requirements Traceability Verification Matrix      
     internal_quality_gates:
       - Technical Design Authority (TDA) for Architecture Decisions
       - Prelimineray Design Review (PDR)
@@ -76,20 +87,49 @@ phases:
   - id: phase-beta-lld
     number: 3
     name: Alpha - Low Level Design
-    objective: Develop Low Level Design
+    objective: Develop Low Level Design and specifications ready for development
     activities:
-      - Execute Application Rationalization Plan (Retain / Retire / Rehost / Replatform / Refactor / Replace)
-      - Migrate all Tier-1 mission-critical systems using targeted modernization strategies
-      - Build/deploy replacement microservices for core business functions
-      - Implement event-driven architecture for high-throughput systems
+      - Update Architecture Decisions
+      - Develop Component Model (Physical)
+        - Detail Interface Specification with inputs, outputs, error code
+        - Capture Logging, Monitoring and Alerting specification 
+        - Map Components to relevant Business Rules
+      - Detail wireframe specification 
+      - Develop Data Model (Physical)
+        - Detailed Specification of DataStores (e.g., Schemas, Tables with field name, length, constraints)
+      - Details Business Intelligence & Analytics Design (if applicable)
+        - Detailed Design for BI&A (e.g., Data Marts)
+        - Detailed Reporting specification with KPIs, Dashboards
+      - Detail Operational Model
+        - Physical specification of Nodes along with Deployment Units
+        - Full list of Bill of Materials (BoM) - Software, Services and Hardware (if applicable) 
+        - Calculate Total Cost of Ownership (TCO)
+      - Develop Data Migration Specification
+        - Data Profiles (Source, targets)
+        - Data Mapping
+        - Data transformation process
+        - Cutover and Rollback process
+      - Develop Test Plans
+        - Functional Test Plan
+        - Integration Test Plan
+        - NFR (Performance, Load) Test Plan
+        - Security Test Plan        
     artefacts:
+      - Architecture Decisions (updated)
       - Component Model (Physical)
       - Operational Model (Physical)
-      - Wireframe Specification
+      - Data Model (Revised)
+      - Data Migration Specification
+      - BI & Analytics Detailed Design
+      - Reporting Specification
+      - User Interface Design Specification      
+      - Wireframe
+      - Test Plan
       - RAID Log (updated)
-      - Architecture Decisions Register (updated)
+
     deliverables:
       - Low Level Design
+      - Requirements Traceability Verification Matrix
     internal_quality_gates:
       - Critical Design Review (CDR)
     client_quality_gates:

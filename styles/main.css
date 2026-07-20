@@ -242,6 +242,17 @@ a:hover { text-decoration: underline; }
   border-left-color: var(--color-primary);
 }
 
+.nav-item--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.nav-item-badge--soon {
+  background: var(--color-border-light);
+  color: var(--color-text-muted);
+}
+
 .nav-item-icon {
   width: 20px;
   height: 20px;

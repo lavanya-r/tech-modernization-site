@@ -16,14 +16,14 @@ const NAV_SECTIONS = [
     label: 'Delivery',
     items: [
       { id: 'phases',       label: 'Program Phases',        icon: '▶',  file: 'content/04-phases.yaml' },
-      { id: 'roles',        label: 'Roles',                 icon: '◈',  file: 'content/roles.yaml' },
+      { id: 'roles',        label: 'Roles',                 icon: '◈',  file: 'content/roles.yaml',        disabled: true },
       { id: 'artifact-graph', label: 'Artefact Flow Graph', icon: '⬡',  file: 'content/11-workproducts.yaml' },
     ]
   },
   {
     label: 'Management',
     items: [
-      { id: 'governance',   label: 'Governance',            icon: '⬡',  file: 'content/05-governance.md' },
+      { id: 'governance',   label: 'Governance',            icon: '⬡',  file: 'content/05-governance.md',  disabled: true },
     ]
   }
 ];
@@ -58,6 +58,18 @@ function buildSidebar() {
     nav.appendChild(title);
 
     section.items.forEach(item => {
+      if (item.disabled) {
+        const span = document.createElement('span');
+        span.className = 'nav-item nav-item--disabled';
+        span.id = `nav-${item.id}`;
+        span.innerHTML = `
+          <span class="nav-item-icon">${item.icon}</span>
+          <span class="nav-item-label">${item.label}</span>
+          <span class="nav-item-badge nav-item-badge--soon">Soon</span>
+        `;
+        nav.appendChild(span);
+        return;
+      }
       const a = document.createElement('a');
       a.className = 'nav-item';
       a.id = `nav-${item.id}`;

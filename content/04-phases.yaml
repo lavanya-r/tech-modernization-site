@@ -18,16 +18,15 @@ phases:
     artefacts:
       - Current State Assessment
       - Code Analysis (using ARC)
+      - As-is IT System Baseline      
       - Requirements
       - Non functional Requirements
       - Security & Privacy Requirements
       - Business Intelligence Requirements
-      - User Story
       - System Context
       - Standards      
       - RAID Log
     deliverables:
-      - As-is IT System Baseline
       - To-Be System Requirements 
       - User Stories 
     internal_quality_gates:
@@ -39,9 +38,9 @@ phases:
       - IBM Watson ARC 
       - IBM Consulting Advantage (ICA) SDLC Assistant Packs - Business Analysis
 
-  - id: phase-alpha-hld
+  - id: phase-hld
     number: 2
-    name: Alpha - High Level Design 
+    name: High Level Design 
     objective: Develop High level solution architecture and design prototype
     activities:
       - Develop Solution Architecture 
@@ -73,22 +72,22 @@ phases:
       - Operational Model
       - Test Strategy
       - Master Test Plan
-      - RAID Log      
+      - RAID Log
+      - RACI Matrix      
     deliverables: 
       - High Level Design
       - Requirements Traceability Verification Matrix      
     internal_quality_gates:
       - Technical Design Authority (TDA) for Architecture Decisions
-      - Prelimineray Design Review (PDR)
-      - Critical Design Review (CDR)
+      - Prelimineray Design Review (PDR) Results
     client_quality_gates:
       - Digital Design Authority (DDA) Review
     AI_SDLC: 
       - IBM Consulting Advantage (ICA) SDLC Assistant Packs - ArchReview
 
-  - id: phase-beta-lld
+  - id: phase-lld
     number: 3
-    name: Alpha - Low Level Design
+    name: Low Level Design
     objective: Develop Low Level Design and specifications ready for development
     activities:
       - Update Architecture Decisions
@@ -126,18 +125,18 @@ phases:
       - Operational Model (Physical)
       - Data Model (Revised)
       - Data Migration Specification
-      - BI & Analytics Detailed Design
       - Report Specification
       - User Interface Design Specification      
       - Wireframe
       - Test Plan
       - RAID Log (updated)
+      - RACI Matrxi (updated)
 
     deliverables:
       - Low Level Design
       - Requirements Traceability Verification Matrix
     internal_quality_gates:
-      - Critical Design Review (CDR)
+      - Critical Design Review (CDR) Results
     client_quality_gates:
       - Digital Design Authority(DDA) Review
     AI_SDLC: 

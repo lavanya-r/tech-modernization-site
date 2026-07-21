@@ -316,7 +316,7 @@ async function renderPhases(data) {
     }).join('');
     const artefactsHtml        = (phase.artefacts || []).map(a => _artefactLi(a, artefactLookup)).join('');
     const deliverablesHtml     = (phase.deliverables || []).map(d => _artefactLi(d, artefactLookup)).join('');
-    const internalGatesHtml    = (phase.internal_quality_gates || []).map(g => `<li>${g}</li>`).join('');
+    const internalGatesHtml    = (phase.internal_quality_gates || []).map(g => _artefactLi(g, artefactLookup)).join('');
     const clientGatesHtml      = (phase.client_quality_gates || []).map(g => `<li>${g}</li>`).join('');
 
     // Optional: modernization strategy table
@@ -485,9 +485,19 @@ async function renderArtifactGraph(data) {
   // ── Phase definitions (colours + display order) ───────────────────────────
   const PHASES = [
     { id: 'phase-disco',    label: 'Discovery',          color: '#d97706', fill: '#fffbeb' },
-    { id: 'phase-alpha-hld',label: 'High-Level Design',  color: '#1d4ed8', fill: '#eff6ff' },
-    { id: 'phase-beta-lld', label: 'Low-Level Design',   color: '#0e7490', fill: '#f0fdfa' },
+    { id: 'phase-hld',      label: 'High-Level Design',  color: '#1d4ed8', fill: '#eff6ff' },
+    { id: 'phase-lld',      label: 'Low-Level Design',   color: '#0e7490', fill: '#f0fdfa' },
   ];
+
+  // ── Lifecycle band definition ─────────────────────────────────────────────
+  // Artefacts whose registry IDs are listed here are hoisted out of all phase
+  // boxes and rendered once in a shared horizontal Lifecycle band at the bottom.
+  const LIFECYCLE_PHASE = { id: 'phase-lifecycle', label: 'Lifecycle', color: '#7c5cd8', fill: '#f3f0ff' };
+  // These registry IDs are hoisted out of every phase box and shown once in the Lifecycle band.
+  const LIFECYCLE_REG_IDS = new Set([
+    'NONE', 'NONE2', 'APP 402',              // Lifecycle outputs (RAID Log, RACI Matrix, RTVOM)
+    'ENG 418', 'ENG 424', 'ENG 419', 'ENG 425', // Quality Gate outputs
+  ]);
 
   // ── Fetch phase artefact lists from 04-phases.yaml ────────────────────────
   let phaseArtNames = {};   // phaseId → string[]
@@ -503,47 +513,54 @@ async function renderArtifactGraph(data) {
   const artLookup = _buildArtefactLookup(data);
 
   // ── Map each phase artefact name → registry id (best-effort fuzzy match) ──
-  // phaseNodes: phaseId → Array<{ uid, id, name, desc, repeated }>
-  // uid is unique per (phase, id) so repeated artefacts get separate node objects.
+  // Artefacts that match a LIFECYCLE_REG_ID are skipped in phase boxes —
+  // they will be collected into the lifecycle band instead.
   const phaseNodes = {};
-  const seenAcrossPhases = {};  // registryId → count (to flag repeated nodes)
+  const lifecycleRegIdsSeen = new Set(); // track which lifecycle artefacts have been collected
 
   PHASES.forEach(ph => {
     phaseNodes[ph.id] = [];
     (phaseArtNames[ph.id] || []).forEach(artName => {
       const match = _matchArtefact(artName, artLookup);
       const regId = match ? match.id   : null;
+      // If this artefact belongs in the lifecycle band, skip it here
+      if (regId && LIFECYCLE_REG_IDS.has(regId)) {
+        lifecycleRegIdsSeen.add(regId);
+        return;
+      }
       const name  = match ? match.name : artName;
       const desc  = match ? match.desc : '';
       const uid   = regId ? `${ph.id}__${regId}` : `${ph.id}__${artName}`;
-      if (regId) seenAcrossPhases[regId] = (seenAcrossPhases[regId] || 0) + 1;
       phaseNodes[ph.id].push({ uid, regId, name, desc, phaseId: ph.id });
     });
   });
 
-  // Mark repeated nodes (same registry id appears in >1 phase)
-  PHASES.forEach(ph => {
-    phaseNodes[ph.id].forEach(n => {
-      n.repeated = n.regId && seenAcrossPhases[n.regId] > 1;
+  // ── Build lifecycle nodes — one node per unique lifecycle artefact seen ────
+  phaseNodes[LIFECYCLE_PHASE.id] = [];
+  // Also include any lifecycle artefacts not referenced by any phase (always show them)
+  LIFECYCLE_REG_IDS.forEach(regId => {
+    const art = (data.artefacts || []).find(a => a.id === regId);
+    if (!art) return;
+    const uid = `${LIFECYCLE_PHASE.id}__${regId}`;
+    phaseNodes[LIFECYCLE_PHASE.id].push({
+      uid, regId, name: art.name, desc: art.desc || '',
+      phaseId: LIFECYCLE_PHASE.id,
     });
   });
 
-  // ── Flat node list (one entry per phase occurrence) ───────────────────────
-  const nodes = PHASES.flatMap(ph => phaseNodes[ph.id]);
+  // ── Flat node list ────────────────────────────────────────────────────────
+  const allPhases = [...PHASES, LIFECYCLE_PHASE];
+  const nodes = allPhases.flatMap(ph => phaseNodes[ph.id]);
 
   // ── Build edges from registry input_artefacts ─────────────────────────────
-  // For each registry edge (srcRegId → tgtRegId), emit one D3 link connecting
-  // the uid of srcRegId's node in the *earliest* phase it appears to the uid
-  // of tgtRegId's node in its phase.
-  const uidByRegId = {};  // regId → first uid encountered (earliest phase)
-  PHASES.forEach(ph => {
+  const uidByRegId = {};  // regId → first uid encountered (phase order, then lifecycle)
+  allPhases.forEach(ph => {
     phaseNodes[ph.id].forEach(n => {
       if (n.regId && !uidByRegId[n.regId]) uidByRegId[n.regId] = n.uid;
     });
   });
-  // Also build a per-phase uid map for target lookup (use same-phase copy if available)
   const uidByRegIdAndPhase = {};  // `${phaseId}|${regId}` → uid
-  PHASES.forEach(ph => {
+  allPhases.forEach(ph => {
     phaseNodes[ph.id].forEach(n => {
       if (n.regId) uidByRegIdAndPhase[`${ph.id}|${n.regId}`] = n.uid;
     });
@@ -555,17 +572,17 @@ async function renderArtifactGraph(data) {
     const tgtMatch = _matchArtefact(tgtArt.name, artLookup);
     if (!tgtMatch) return;
     (tgtArt.input_artefacts || []).forEach(srcRegId => {
-      // Find all phase copies of the target
-      PHASES.forEach(ph => {
+      // Determine which "phases" the target appears in (including lifecycle)
+      allPhases.forEach(ph => {
         const tgtUid = uidByRegIdAndPhase[`${ph.id}|${tgtMatch.id}`];
         if (!tgtUid) return;
-        // Prefer same-phase source copy; fall back to earliest
+        // Prefer same-phase source copy; fall back to earliest (incl. lifecycle)
         const srcUid = uidByRegIdAndPhase[`${ph.id}|${srcRegId}`] || uidByRegId[srcRegId];
         if (srcUid && nodeUids.has(srcUid) && srcUid !== tgtUid) {
-          // Avoid duplicate links
           if (!links.find(l => l.source === srcUid && l.target === tgtUid)) {
+            const srcPhaseId = srcUid.split('__')[0];
             links.push({ source: srcUid, target: tgtUid,
-              crossPhase: !srcUid.startsWith(ph.id) });
+              crossPhase: srcPhaseId !== ph.id });
           }
         }
       });
@@ -577,15 +594,11 @@ async function renderArtifactGraph(data) {
   const standaloneCount = nodes.filter(n => !linkedUids.has(n.uid)).length;
 
   // ── Legend HTML ───────────────────────────────────────────────────────────
-  const legendHtml = PHASES.map(ph => `
+  const legendHtml = [...PHASES, LIFECYCLE_PHASE].map(ph => `
     <div class="ag-legend-item">
       <span class="ag-legend-dot" style="background:${ph.color};"></span>
       <span>${ph.label}</span>
-    </div>`).join('') + `
-    <div class="ag-legend-item">
-      <span class="ag-legend-dot" style="background:#9ca3af;border:1.5px dashed #9ca3af;box-sizing:border-box;"></span>
-      <span>Repeated node</span>
-    </div>`;
+    </div>`).join('');
 
   // ── Container HTML ────────────────────────────────────────────────────────
   const html = `
@@ -593,8 +606,8 @@ async function renderArtifactGraph(data) {
       <h1>Artefact Flow Graph</h1>
       <p class="yaml-description">
         Phase-swimlane dependency graph. Artefacts are placed inside their phase box.
-        Nodes appearing in multiple phases are repeated — arrows show
-        <em>input_artefact</em> relationships from the registry.
+        Lifecycle artefacts (RAID Log, RACI Matrix, etc.) appear once in the shared
+        Lifecycle band. Arrows show <em>input_artefact</em> relationships from the registry.
       </p>
     </div>
 
@@ -615,10 +628,10 @@ async function renderArtifactGraph(data) {
       <div class="ag-tooltip" id="ag-tooltip"></div>
     </div>`;
 
-  return { html, init: () => initArtifactGraph(nodes, links, PHASES, phaseNodes) };
+  return { html, init: () => initArtifactGraph(nodes, links, PHASES, LIFECYCLE_PHASE, phaseNodes) };
 }
 
-function initArtifactGraph(nodes, links, PHASES, phaseNodes) {
+function initArtifactGraph(nodes, links, PHASES, LIFECYCLE_PHASE, phaseNodes) {
   const wrap     = document.getElementById('ag-wrap');
   const svg      = d3.select('#ag-svg');
   const tip      = document.getElementById('ag-tooltip');
@@ -626,38 +639,78 @@ function initArtifactGraph(nodes, links, PHASES, phaseNodes) {
   if (!wrap || svg.empty()) return;
 
   const W = wrap.clientWidth  || 960;
-  const H = wrap.clientHeight || 620;
+  const H = wrap.clientHeight || 700;
   svg.attr('width', W).attr('height', H);
 
-  // ── Phase box geometry ────────────────────────────────────────────────────
-  const PAD_TOP    = 54;   // space for phase label inside box
-  const PAD_SIDE   = 18;
-  const BOX_GAP    = 24;
-  const BOX_COUNT  = PHASES.length;
-  const BOX_W      = Math.floor((W - BOX_GAP * (BOX_COUNT + 1)) / BOX_COUNT);
-  const BOX_H      = H - 40;
-  const NODE_R     = 14;
-  const COLS       = Math.max(1, Math.floor((BOX_W - PAD_SIDE * 2) / 90));
+  // ── Layout constants ──────────────────────────────────────────────────────
+  const HEADER_H       = 34;   // coloured header band height inside every box
+  const PAD_TOP        = HEADER_H + 20; // usable area starts below header + gap
+  const PAD_BOT        = 18;   // bottom inset inside phase box
+  const PAD_SIDE       = 28;   // side padding inside box
+  const BOX_GAP        = 24;
+  const LIFECYCLE_H    = 120;  // height of the lifecycle band at the bottom
+  const LIFECYCLE_GAP  = 20;   // gap between phase boxes and lifecycle band
+  const BOX_COUNT      = PHASES.length;
+  const BOX_W          = Math.floor((W - BOX_GAP * (BOX_COUNT + 1)) / BOX_COUNT);
+  const BOX_H          = H - 40 - LIFECYCLE_H - LIFECYCLE_GAP;
+  const NODE_R         = 14;
+  const COL_CELL       = 110;  // column cell width
+  const COLS           = Math.max(1, Math.floor((BOX_W - PAD_SIDE * 2) / COL_CELL));
 
-  // Assign initial (fx/fy) positions — grid inside each phase box
+  // Lifecycle band geometry
+  const LC_Y  = 20 + BOX_H + LIFECYCLE_GAP;
+  const LC_X  = BOX_GAP;
+  const LC_W  = W - BOX_GAP * 2;
+
+  // ── Helper: evenly distribute ni nodes across a box, centred vertically ───
+  // Returns { x, y } for node index ni inside a box at (bx, by) of size (bw, bh).
+  function gridPos(ni, count, cols, bx, by, bw, bh) {
+    const rows      = Math.ceil(count / cols);
+    const cellW     = (bw - PAD_SIDE * 2) / cols;
+    const usableH   = bh - PAD_TOP - PAD_BOT;
+    // Row pitch spreads rows evenly; clamp pitch so rows never overflow
+    const rowPitch  = rows > 1 ? Math.min(usableH / rows, 110) : 0;
+    const gridH     = rowPitch * (rows - 1);
+    // Vertically centre the whole grid in the usable area
+    const startY    = by + PAD_TOP + (usableH - gridH) / 2;
+    const col = ni % cols;
+    const row = Math.floor(ni / cols);
+    return {
+      x: bx + PAD_SIDE + col * cellW + cellW / 2,
+      y: startY + row * rowPitch,
+    };
+  }
+
+  // ── Assign initial positions for phase nodes ──────────────────────────────
   PHASES.forEach((ph, pi) => {
-    const boxX = BOX_GAP + pi * (BOX_W + BOX_GAP);
-    const boxY = 20;
+    const boxX  = BOX_GAP + pi * (BOX_W + BOX_GAP);
+    const boxY  = 20;
+    const count = phaseNodes[ph.id].length;
     phaseNodes[ph.id].forEach((n, ni) => {
-      const col = ni % COLS;
-      const row = Math.floor(ni / COLS);
-      n.fx0 = boxX + PAD_SIDE + col * Math.floor((BOX_W - PAD_SIDE * 2) / COLS) + NODE_R + 10;
-      n.fy0 = boxY + PAD_TOP  + row * 80 + NODE_R + 10;
-      n.x   = n.fx0;
-      n.y   = n.fy0;
-      n.boxX = boxX;
-      n.boxY = boxY;
-      n.boxW = BOX_W;
-      n.boxH = BOX_H;
+      const pos  = gridPos(ni, count, COLS, boxX, boxY, BOX_W, BOX_H);
+      n.fx0 = pos.x;  n.fy0 = pos.y;
+      n.x   = pos.x;  n.y   = pos.y;
+      n.boxX = boxX;  n.boxY = boxY;
+      n.boxW = BOX_W; n.boxH = BOX_H;
       n.phaseColor = ph.color;
       n.phaseFill  = ph.fill;
       n.phaseLabel = ph.label;
     });
+  });
+
+  // ── Assign initial positions for lifecycle nodes (centred in band) ─────────
+  const lcNodes  = phaseNodes[LIFECYCLE_PHASE.id] || [];
+  const lcCount  = lcNodes.length;
+  const lcCols   = Math.max(1, Math.floor((LC_W - PAD_SIDE * 2) / COL_CELL));
+  lcNodes.forEach((n, ni) => {
+    const pos  = gridPos(ni, lcCount, lcCols, LC_X, LC_Y, LC_W, LIFECYCLE_H);
+    n.fx0 = pos.x;  n.fy0 = pos.y;
+    n.x   = pos.x;  n.y   = pos.y;
+    n.boxX = LC_X; n.boxY = LC_Y;
+    n.boxW = LC_W; n.boxH = LIFECYCLE_H;
+    n.phaseColor = LIFECYCLE_PHASE.color;
+    n.phaseFill  = LIFECYCLE_PHASE.fill;
+    n.phaseLabel = LIFECYCLE_PHASE.label;
   });
 
   // ── Arrow markers ─────────────────────────────────────────────────────────
@@ -673,8 +726,8 @@ function initArtifactGraph(nodes, links, PHASES, phaseNodes) {
       .append('path').attr('d', 'M0,-4L8,0L0,4')
         .attr('fill', ARROW_COLORS[t]).attr('opacity', 0.85);
   });
-  // Per-phase markers for within-box links
-  PHASES.forEach(ph => {
+  // Per-phase + lifecycle markers
+  [...PHASES, LIFECYCLE_PHASE].forEach(ph => {
     defs.append('marker')
       .attr('id', `arr-ph-${ph.id}`)
       .attr('viewBox', '0 -4 8 8')
@@ -698,12 +751,12 @@ function initArtifactGraph(nodes, links, PHASES, phaseNodes) {
   PHASES.forEach((ph, pi) => {
     const bx = BOX_GAP + pi * (BOX_W + BOX_GAP);
     const by = 20;
-    // Shadow rect
+    // Shadow
     boxLayer.append('rect')
       .attr('x', bx + 3).attr('y', by + 3)
       .attr('width', BOX_W).attr('height', BOX_H).attr('rx', 10)
       .attr('fill', 'rgba(0,0,0,0.06)');
-    // Fill rect
+    // Fill
     boxLayer.append('rect')
       .attr('x', bx).attr('y', by)
       .attr('width', BOX_W).attr('height', BOX_H).attr('rx', 10)
@@ -734,17 +787,43 @@ function initArtifactGraph(nodes, links, PHASES, phaseNodes) {
       .text(ph.label.toUpperCase());
   });
 
+  // ── Lifecycle band rect ───────────────────────────────────────────────────
+  // Shadow
+  boxLayer.append('rect')
+    .attr('x', LC_X + 3).attr('y', LC_Y + 3)
+    .attr('width', LC_W).attr('height', LIFECYCLE_H).attr('rx', 10)
+    .attr('fill', 'rgba(0,0,0,0.06)');
+  // Fill
+  boxLayer.append('rect')
+    .attr('x', LC_X).attr('y', LC_Y)
+    .attr('width', LC_W).attr('height', LIFECYCLE_H).attr('rx', 10)
+    .attr('fill', LIFECYCLE_PHASE.fill)
+    .attr('stroke', LIFECYCLE_PHASE.color).attr('stroke-width', 2);
+  // Header band
+  boxLayer.append('rect')
+    .attr('x', LC_X).attr('y', LC_Y)
+    .attr('width', LC_W).attr('height', 34).attr('rx', 10)
+    .attr('fill', LIFECYCLE_PHASE.color);
+  boxLayer.append('rect')
+    .attr('x', LC_X).attr('y', LC_Y + 24)
+    .attr('width', LC_W).attr('height', 10)
+    .attr('fill', LIFECYCLE_PHASE.color);
+  // Label
+  boxLayer.append('text')
+    .attr('x', LC_X + 18).attr('y', LC_Y + 21)
+    .attr('font-size', 10.5).attr('font-weight', '700').attr('fill', '#fff')
+    .attr('letter-spacing', '0.4')
+    .text(LIFECYCLE_PHASE.label.toUpperCase());
+
   // ── Force simulation ──────────────────────────────────────────────────────
-  // Soft-pin nodes inside their box; allow gentle drift within box bounds.
   const simulation = d3.forceSimulation(nodes)
-    .force('link',    d3.forceLink(links).id(d => d.uid).distance(85).strength(0.4))
+    .force('link',    d3.forceLink(links).id(d => d.uid).distance(95).strength(0.4))
     .force('charge',  d3.forceManyBody().strength(-180))
-    .force('collide', d3.forceCollide(NODE_R + 6))
-    .force('boxX',    d3.forceX(d => d.fx0).strength(0.35))
-    .force('boxY',    d3.forceY(d => d.fy0).strength(0.35))
+    .force('collide', d3.forceCollide(NODE_R + 8))
+    .force('boxX',    d3.forceX(d => d.fx0).strength(0.4))
+    .force('boxY',    d3.forceY(d => d.fy0).strength(0.4))
     .alphaDecay(0.03);
 
-  // Clamp nodes inside their phase box on each tick
   function clamp(val, lo, hi) { return Math.max(lo, Math.min(hi, val)); }
 
   // ── Edges ─────────────────────────────────────────────────────────────────
@@ -777,14 +856,13 @@ function initArtifactGraph(nodes, links, PHASES, phaseNodes) {
         .on('end',   (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; })
       );
 
-  // Circle — repeated nodes get dashed stroke
+  // Circle
   node.append('circle')
     .attr('r', NODE_R)
     .attr('fill', d => d.phaseColor)
     .attr('fill-opacity', 0.18)
-    .attr('stroke', d => d.repeated ? '#9ca3af' : d.phaseColor)
-    .attr('stroke-width', 2)
-    .attr('stroke-dasharray', d => d.repeated ? '4 2' : null);
+    .attr('stroke', d => d.phaseColor)
+    .attr('stroke-width', 2);
 
   // Short ID label inside circle
   node.append('text')
@@ -798,12 +876,12 @@ function initArtifactGraph(nodes, links, PHASES, phaseNodes) {
       return parts[parts.length - 1].slice(0, 5);
     });
 
-  // Name label below circle
+  // Name label below circle — truncate at 22 chars (was 18)
   node.append('text')
     .attr('class', 'ag-node-label')
     .attr('text-anchor', 'middle')
     .attr('dy', '2.4em')
-    .text(d => d.name.length > 20 ? d.name.slice(0, 18) + '…' : d.name);
+    .text(d => d.name.length > 22 ? d.name.slice(0, 21) + '…' : d.name);
 
   // ── Tooltip ───────────────────────────────────────────────────────────────
   node
@@ -863,10 +941,10 @@ function initArtifactGraph(nodes, links, PHASES, phaseNodes) {
 
   // ── Tick ──────────────────────────────────────────────────────────────────
   simulation.on('tick', () => {
-    // Clamp nodes inside their box
+    // Clamp each node inside its own box bounds (respecting header at top and padding at bottom)
     nodes.forEach(d => {
-      d.x = clamp(d.x, d.boxX + NODE_R + 4, d.boxX + d.boxW - NODE_R - 4);
-      d.y = clamp(d.y, d.boxY + PAD_TOP + NODE_R, d.boxY + d.boxH - NODE_R - 4);
+      d.x = clamp(d.x, d.boxX + PAD_SIDE + NODE_R,       d.boxX + d.boxW - PAD_SIDE - NODE_R);
+      d.y = clamp(d.y, d.boxY + PAD_TOP  + NODE_R,       d.boxY + d.boxH - PAD_BOT  - NODE_R);
     });
 
     link

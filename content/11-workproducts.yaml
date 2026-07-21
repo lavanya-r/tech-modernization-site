@@ -8,23 +8,30 @@ description: >
 # Use artefact_id values in workproduct 'artefacts' (outputs) and 'input_artefacts'.
 artefacts:
   # Assessment outputs
-  - id: ASIS_NOID
+  - id: ASIS_NOID1
     name: Current State Assessment
+    desc: A current state assessment involves gathering and analyzing data from a variety of sources, including interviews with stakeholders, documentation reviews, process mapping, and data analysis.
   - id: ASIS_NOID2
-    name: Code Analysis (using ARC)    
+    name: Code Analysis (using ARC)
+    desc: Analyze source code and configuration using AI tools to understand components (classes, objects), their relationships and implementation logic including business rules.
   - id: ASIS_NOID3
-    name: As-is IT System Baseline    
+    name: As-is IT System Baseline
+    desc: Establish a baseline of the current state of the IT system by correlating information gathered through the assessment of documentation, stakeholder interviews alongside the Code Analysis Report using AI tools.
+    input_artefacts:
+      - ASIS_NOID1
+      - ASIS_NOID2
   # Requirement outputs
   - id: ART 0651
     name: System Context
     desc: The System Context work product initially represents the entire system as a single object or process and identifies the interfaces between the system and external entities.
   - id: ART 0647
     name: Requirements
-    desc: This artefact documents the description of features or capabilities, intended behavior, performance etc. required by stakeholders for the agreed solution or service.
+    desc: This artefact documents the description of features or capabilities, intended behavior, performance etc. required by stakeholders for the agreed solution or service. 
     input_artefacts:
-      - ASIS_NOID
-      - ASIS_NOID2
       - ASIS_NOID3
+      - ART 0651
+      - OPS 315
+      - ART 0647-sub
   - id: OPS 315
     name: Security & Privacy Requirements
     desc: This artefact captures requirements across Administration, Asset Protection, Authorization, Accountability, Availability and Assurance.
@@ -87,6 +94,8 @@ artefacts:
       - ART 0513
       - ART 0507
       - ART 0651
+      - CUST DDD
+      - OPS 316
   - id: ART 0505
     name: Business Rules
     desc: This artefact expresses policies and constraints that apply to the business.    
@@ -108,21 +117,24 @@ artefacts:
   - id: APP 148
     name: User Interface Design Specification 
     desc: The primary purpose of the User Interface Design Specification is to communicate detailed guidance to the developers concerning the user interface to be implemented. 
+    input_artefacts:
+      - ART 0515
   - id: APP 0730
     name: Wireframes
     desc: The purpose of the wireframes is for a skeletal visual representation of what the end product will look like and is to communicate features a page will contain.
+    input_artefacts:
+      - APP 148
   - id: APP 030
     name: Interface Specification   
     desc: This artefact describes the interfaces between the various programs that comprise an application as well as between that application and external systems.
+    input_artefacts:
+      - APP 030-sub
   - id: APP 030-sub 
     name: Interface Catalogue
     desc: This work product provides a single Catalogue of all the external and internal interfaces for a solution, covering all component-to-component interactions and providing references or links to the interface definitions.
   - id: CUST DDD 
     name: DevSecOps Design Document
     desc: Involves a comprehensive document that outlines the architecture, processes, tools, and security considerations for implementing DevSecOps practices within an organization development lifecycle.
-    input_artefacts:
-      - ART 0522
-      - ART 0515
   - id: APP 017
     name: Data Migration Plan
     desc: The Data Migration Plan work product covers the plan for migrating (automated/manual) data.
@@ -145,14 +157,21 @@ artefacts:
     input_artefacts: 
       - APP 017
   # Quality Assurance outputs
-  - id: ART 0651
+  - id: ART 0561
     name: Test Strategy
     desc: This artifact defines the goals and objectives fro testing as well as the overall approach for how the test effort will be conducted to achieve those results.
   - id: APP 133
     name: Master Test Plan
     desc: The Master Test Plan documents the "what" (scope and objectives), the "why" (purpose), the "when" (key milestones), and the "who" (organizational roles and responsibilities) for all levels of dynamic testing.
     input_artefacts:
-      - ART 0651
+      - ART 0561
+  - id: ART 0652
+    name: Test Plan 
+    desc: This artifact is created for each level of testing identified as necessary based on project life cycle testing requirements. Common levels of testing include Unit Test, Integration Test, System Test, Acceptance Test, Operability test and System integration test. 
+    input_artefacts:
+      - APP 133
+      - ART 0515
+      - ART 0522
   # Lifecycle outputs
   - id: APP 402
     name: Requirements Traceability Verification Matrix
@@ -160,13 +179,19 @@ artefacts:
   - id: NONE
     name: RAID Log
     desc: The Risk Action Issue Decision (RAID) Log is used to capture risks, issues/impediments, actions & key decisions that are generated throughout the project.    
+  - id: NONE2
+    name: RACI Matrix
+    desc: Clearly documents who is responsible, who is accountable, who needs to be consulted, and who must be kept informed for key activities of an engagement/ project/ business process.
   # Quality Gate outputs
   - id: ENG 418
-    name: Business Requirements Review Results
+    name: Business Requirements Review (BRR) Results
     desc: The Business Requirements Review (BRR) is conducted to establish the business/customer requirements baseline.
   - id: ENG 424
-    name: System Requirements Review Results
+    name: System Requirements Review (SRR) Results
     desc: The System Requirements Review (SRR) is conducted to establish the System requirements baseline.
+  - id: ENG 422 
+    name: Prelimineray Design Review (PDR) Results
+    desc: The Preliminary Design Review Results work product documents the results of the Preliminary Design Review (PDR), which is used to baseline the system design and requirements at the component level. The PDR is held to develop a component baseline.
   - id: ENG 419
     name: Critical Design Review (CDR) Results
     desc: The Critical Design Review is held to consolidate component design documentation and review it to develop a design baseline

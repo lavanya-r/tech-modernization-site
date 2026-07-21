@@ -130,7 +130,7 @@ phases:
       - Wireframe
       - Test Plan
       - RAID Log (updated)
-      - RACI Matrxi (updated)
+      - RACI Matrix (updated)
 
     deliverables:
       - Low Level Design
